@@ -1,0 +1,35 @@
+[
+  {
+    "bookSourceName": "黄色仓库-稳定维护版",
+    "bookSourceGroup": "视频播放",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://333.aatck.cc",
+    "enabled": true,
+    "enabledExplore": true,
+    "enabledCookieJar": true,
+    "bookSourceComment": "架构定型版：全面转向发现页分类浏览，动态域名自适应，/static/count.php 鉴权解密",
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\"}",
+    "exploreUrl": "[\n  {\"title\": \"🇨🇳 国产系列\", \"url\": \"/vodtype/2{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇯🇵 日韩无码\", \"url\": \"/vodtype/1{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇪🇺 欧美风情\", \"url\": \"/vodtype/3{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🎌 成人动漫\", \"url\": \"/vodtype/4{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🔥 热门推荐\", \"url\": \"/vodshow/1--hits------{{page}}---.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}}\n]",
+    "ruleExplore": {
+      "bookList": "@css:.stui-vodlist__box:has(a[href*=/v5/])",
+      "bookUrl": "@css:a[href*=\"/v5/\"]@href",
+      "coverUrl": "@css:a.stui-vodlist__thumb@data-original||@css:img@data-original||@css:img@src",
+      "name": "@css:h4.title a@text||@css:h4.title@text",
+      "kind": "@css:span.pic-text@text"
+    },
+    "ruleBookInfo": {
+      "name": "@css:h3.title@text||@css:title@text## - 黄色仓库.*",
+      "tocUrl": ""
+    },
+    "ruleToc": {
+      "chapterList": "@js:\nfunction gp(h,k){var m=String(h).match(new RegExp(k+\"\\\\s*=\\\\s*'([^']+)'\"));return m?m[1]:'';}\nfunction add(n,u){list.push(JSON.stringify({name:String(n),url:String(u)}));}\nvar list=[];\nvar html=String(result||src||'');\nvar id=gp(html,'AID'),sid=gp(html,'ASID')||'1',nid=gp(html,'ANID')||'1',tk=gp(html,'AK');\nif(!id){var um=String(baseUrl).match(/\\/v5\\/(\\d+)/);id=um?um[1]:'';}\nvar dm = String(baseUrl).match(/^(https?:\\/\\/[^\\/]+)/);\nvar domain = dm ? dm[1] : String(source.getKey()).replace(/\\/+$/,'');\nif(!id||!tk){\n  add('获取失败-页面里没找到AID/AK',baseUrl);\n}else{\n  var body='id='+id+'&sid='+sid+'&nid='+nid+'&tk='+tk+'&g=1&x=180&y=320&dt=1200&sw=1080&sh=1920&tz=-480&t='+Date.now();\n  var text='';\n  try{\n    var headers={\n      'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',\n      'X-Requested-With':'XMLHttpRequest',\n      'Referer':String(baseUrl),\n      'Origin':domain,\n      'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'\n    };\n    var resp=java.post(domain+'/static/count.php',body,headers);\n    text=(resp&&typeof resp.body==='function')?String(resp.body()):String(resp);\n    var j=JSON.parse(text);\n    if(j&&j.ok&&j.u){\n      add((book&&book.name)?book.name:'点击播放',java.base64Decode(j.u));\n    }else{\n      add('获取失败-接口无返回:'+text.substring(0,80),baseUrl);\n    }\n  }catch(e){\n    add('获取失败:'+e+' '+text.substring(0,60),baseUrl);\n  }\n}\nlist;",
+      "chapterName": "$.name",
+      "chapterUrl": "$.url"
+    },
+    "ruleContent": {
+      "content": "@js:\nvar u=String(baseUrl);\nif(book.durChapterIndex==chapter.index){\n  java.startBrowser(u,title);\n  java.toast('正在调起浏览器播放');\n}\n'<p>【刷新正文】重新调起浏览器播放</p><p>视频地址：</p><p>'+u+'</p>';"
+    },
+    "respondTime": 8000,
+    "weight": 0
+  }
+]

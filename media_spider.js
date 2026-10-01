@@ -3,8 +3,9 @@
  * Version: 2.1.0-Release
  */
 
-const HOST = 'https://222.aatck.cc';
+let HOST = 'https://333.aatck.cc';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const BASE_DOMAIN = 'aatck.cc';
 
 let siteKey = '';
 let siteType = 0;
@@ -177,9 +178,51 @@ async function postCount(countUrl, detailUrl, aid, asid, anid, ak) {
     return '';
 }
 
+// 域名存活探测（轻量请求一个分类页，检查是否包含视频列表标记）
+async function isHostAlive(url) {
+    try {
+        let res = await req(url + '/vodtype/1.html', {
+            method: 'get',
+            headers: { 'User-Agent': DEFAULT_UA },
+            timeout: 3000
+        });
+        let html = getResponseContent(res);
+        return !!(html && html.indexOf('stui-vodlist__box') !== -1);
+    } catch (e) {
+        return false;
+    }
+}
+
+// 自动探测当前可用域名（数字递增规律：111→222→333→444...）
+async function detectHost() {
+    // 先试当前 HOST，能用就不折腾
+    if (await isHostAlive(HOST)) return;
+
+    // 提取当前数字
+    let m = HOST.match(/(\d+)\./);
+    let cur = m ? parseInt(m[1]) : 333;
+
+    // 候选列表：当前+1到+5（应对小步跳），再加整百整十的常见跳法
+    let candidates = [];
+    for (let i = 1; i <= 5; i++) candidates.push(cur + i);
+    [111, 222, 333, 444, 555, 666, 777, 888, 999].forEach(function(n) {
+        if (n > cur && candidates.indexOf(n) === -1) candidates.push(n);
+    });
+
+    for (let i = 0; i < candidates.length; i++) {
+        let testUrl = 'https://' + candidates[i] + '.' + BASE_DOMAIN;
+        if (await isHostAlive(testUrl)) {
+            HOST = testUrl;
+            return;
+        }
+    }
+    // 全部失败，保持原 HOST，等用户手动排查
+}
+
 async function init(cfg) {
     siteKey = cfg.skey;
     siteType = cfg.stype;
+    await detectHost();
 }
 
 // 分类隐晦化展示
@@ -189,6 +232,7 @@ async function home(filter) {
             { type_id: '2', type_name: '国产专区' },
             { type_id: '1', type_name: '日韩剧场' },
             { type_id: '3', type_name: '欧美精选' },
+            { type_id: '4', type_name: '成人动漫' },
             { type_id: 'hits', type_name: '热播推荐' }
         ]
     });
