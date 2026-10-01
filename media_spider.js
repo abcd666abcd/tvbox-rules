@@ -232,8 +232,7 @@ async function home(filter) {
             { type_id: '2', type_name: '国产专区' },
             { type_id: '1', type_name: '日韩剧场' },
             { type_id: '3', type_name: '欧美精选' },
-            { type_id: '4', type_name: '成人动漫' },
-            { type_id: 'hits', type_name: '热播推荐' }
+            { type_id: '4', type_name: '成人动漫' }
         ]
     });
 }
