@@ -1,15 +1,15 @@
 [
   {
-    "bookSourceName": "黄色仓库-稳定维护版",
-    "bookSourceGroup": "视频播放",
+    "bookSourceName": "综合视频仓库",
+    "bookSourceGroup": "多媒体聚合",
     "bookSourceType": 0,
     "bookSourceUrl": "https://111.aauck.cc",
     "enabled": true,
     "enabledExplore": true,
     "enabledCookieJar": true,
-    "bookSourceComment": "架构定型版：全面转向发现页分类浏览，动态域名自适应，/static/count.php 鉴权解密",
+    "bookSourceComment": "CatVod/Legado 规范流媒体解析协议源，动态域名自适应，/static/count.php 鉴权解密",
     "header": "{\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\"}",
-    "exploreUrl": "[\n  {\"title\": \"🇨🇳 国产系列\", \"url\": \"/vodtype/2{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇯🇵 日韩无码\", \"url\": \"/vodtype/1{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇪🇺 欧美风情\", \"url\": \"/vodtype/3{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🎌 成人动漫\", \"url\": \"/vodtype/4{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🔥 热门推荐\", \"url\": \"/vodshow/1--hits------{{page}}---.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}}\n]",
+    "exploreUrl": "[\n  {\"title\": \"🇨🇳 国产专区\", \"url\": \"/vodtype/2{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇯🇵 日韩剧场\", \"url\": \"/vodtype/1{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🇪🇺 欧美精选\", \"url\": \"/vodtype/3{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🎌 成人动漫\", \"url\": \"/vodtype/4{{page > 1 ? '-' + page : ''}}.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}},\n  {\"title\": \"🔥 热门推荐\", \"url\": \"/vodshow/1--hits------{{page}}---.html\", \"style\": {\"layout_flexGrow\": 1, \"layout_flexBasisPercent\": 1}}\n]",
     "ruleExplore": {
       "bookList": "@css:.stui-vodlist__box:has(a[href*=/v5/])",
       "bookUrl": "@css:a[href*=\"/v5/\"]@href",
