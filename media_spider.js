@@ -3,9 +3,17 @@
  * Version: 2.1.0-Release
  */
 
-let HOST = 'https://333.aatck.cc';
+let HOST = 'https://111.aauck.cc';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const BASE_DOMAIN = 'aatck.cc';
+const REMOTE_DOMAINS_URL = 'https://ghproxy.net/https://raw.githubusercontent.com/abcd666abcd/tvbox-rules/main/domains.json';
+const FALLBACK_DOMAINS = [
+    'https://111.aauck.cc',
+    'https://222.aauck.cc',
+    'https://333.aauck.cc',
+    'https://444.aauck.cc',
+    'https://333.aatck.cc',
+    'https://222.aatck.cc'
+];
 
 let siteKey = '';
 let siteType = 0;
@@ -178,45 +186,87 @@ async function postCount(countUrl, detailUrl, aid, asid, anid, ak) {
     return '';
 }
 
-// 域名存活探测（轻量请求一个分类页，检查是否包含视频列表标记）
+// 域名深度闭环校验：不仅验证分类页，更取详情页参数模拟 POST /static/count.php，确保直链能成功解码（包含 .m3u8）
 async function isHostAlive(url) {
     try {
-        let res = await req(url + '/vodtype/1.html', {
+        let catRes = await req(url + '/vodtype/1.html', {
             method: 'get',
-            headers: { 'User-Agent': DEFAULT_UA },
+            headers: { 'User-Agent': DEFAULT_UA, 'Referer': url + '/' },
             timeout: 3000
         });
-        let html = getResponseContent(res);
-        return !!(html && html.indexOf('stui-vodlist__box') !== -1);
+        let catHtml = getResponseContent(catRes);
+        if (!catHtml || catHtml.indexOf('stui-vodlist__box') === -1) return false;
+
+        // 从分类页提取第一个真实视频详情链接
+        let m = catHtml.match(/href=["']\/(?:v5\/)?(\d+)(?:-1-1)?\.html["']/i);
+        let testVid = m ? m[1] : '270134';
+        let detailUrl = `${url}/v5/${testVid}-1-1.html`;
+
+        let detRes = await req(detailUrl, {
+            method: 'get',
+            headers: { 'User-Agent': DEFAULT_UA, 'Referer': url + '/' },
+            timeout: 3000
+        });
+        let detHtml = getResponseContent(detRes);
+        if (!detHtml) return false;
+
+        let aid = gp(detHtml, 'AID') || testVid;
+        let sid = gp(detHtml, 'ASID') || '1';
+        let nid = gp(detHtml, 'ANID') || '1';
+        let tk = gp(detHtml, 'AK') || (detHtml.match(/\bAK\s*=\s*['"]([a-fA-F0-9]{32,})['"]/i) || [])[1];
+        if (!aid || !tk) return false;
+
+        // 核心：真实探测取流接口
+        let realUrl = await postCount(`${url}/static/count.php`, detailUrl, aid, sid, nid, tk);
+        return !!(realUrl && (realUrl.indexOf('.m3u8') !== -1 || realUrl.startsWith('http')));
     } catch (e) {
         return false;
     }
 }
 
-// 自动探测当前可用域名（数字递增规律：111→222→333→444...）
+// 自动探测当前可用域名：优先拉取 GitHub 域名池，结合本地备选池与数字递增规则
 async function detectHost() {
-    // 先试当前 HOST，能用就不折腾
+    // 1. 如果当前 HOST 真实取流完全正常，秒开不折腾
     if (await isHostAlive(HOST)) return;
 
-    // 提取当前数字
-    let m = HOST.match(/(\d+)\./);
-    let cur = m ? parseInt(m[1]) : 333;
+    let pool = [];
 
-    // 候选列表：当前+1到+5（应对小步跳），再加整百整十的常见跳法
-    let candidates = [];
-    for (let i = 1; i <= 5; i++) candidates.push(cur + i);
-    [111, 222, 333, 444, 555, 666, 777, 888, 999].forEach(function(n) {
-        if (n > cur && candidates.indexOf(n) === -1) candidates.push(n);
+    // 2. 尝试从 GitHub 远程配置拉取最新域名池（无感热更新）
+    try {
+        let remoteRes = await req(REMOTE_DOMAINS_URL, {
+            method: 'get',
+            headers: { 'User-Agent': DEFAULT_UA },
+            timeout: 3000
+        });
+        let remoteJson = JSON.parse(getResponseContent(remoteRes));
+        if (remoteJson && Array.isArray(remoteJson.domains)) {
+            pool = pool.concat(remoteJson.domains);
+        }
+    } catch (e) {}
+
+    // 3. 合并本地内置兜底池
+    FALLBACK_DOMAINS.forEach(function(d) {
+        if (pool.indexOf(d) === -1) pool.push(d);
     });
 
-    for (let i = 0; i < candidates.length; i++) {
-        let testUrl = 'https://' + candidates[i] + '.' + BASE_DOMAIN;
-        if (await isHostAlive(testUrl)) {
-            HOST = testUrl;
+    // 4. 对每个可用主域，额外自动探测相邻前缀（例如 111, 222, 333, 444, 555）
+    let prefixes = [111, 222, 333, 444, 555];
+    let candidateBases = ['aauck.cc', 'aatck.cc'];
+    candidateBases.forEach(function(base) {
+        prefixes.forEach(function(num) {
+            let u = 'https://' + num + '.' + base;
+            if (pool.indexOf(u) === -1) pool.push(u);
+        });
+    });
+
+    // 5. 循环验证闭环取流能力，命中第一个完全可用的直链域名即切换
+    for (let i = 0; i < pool.length; i++) {
+        let target = pool[i];
+        if (target !== HOST && await isHostAlive(target)) {
+            HOST = target;
             return;
         }
     }
-    // 全部失败，保持原 HOST，等用户手动排查
 }
 
 async function init(cfg) {

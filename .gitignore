@@ -1,0 +1,5 @@
+AGENTS.md
+CLAUDE.md
+*.log
+.vscode/
+.idea/
