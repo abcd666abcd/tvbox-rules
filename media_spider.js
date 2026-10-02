@@ -5,7 +5,7 @@
 
 let HOST = 'https://111.aauck.cc';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const REMOTE_DOMAINS_URL = 'https://ghfast.top/https://raw.githubusercontent.com/abcd666abcd/tvbox-rules/main/domains.json';
+const REMOTE_DOMAINS_URL = 'https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/domains.json';
 const FALLBACK_DOMAINS = [
     'https://111.aauck.cc',
     'https://222.aauck.cc',

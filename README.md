@@ -23,5 +23,5 @@ A modular, lightweight streaming rule parser and media indexing engine designed 
 在支持 TVBox / CatVod 协议的播放终端中，将以下远程加速接口配置至**点播配置源**：
 
 ```text
-https://ghfast.top/https://raw.githubusercontent.com/abcd666abcd/tvbox-rules/main/config.json
+https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/config.json
 ```
