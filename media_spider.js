@@ -3,13 +3,13 @@
  * Version: 2.1.0-Release
  */
 
-let HOST = 'https://111.aavck.cc';
+let HOST = 'https://333.aavck.cc';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const REMOTE_DOMAINS_URL = 'https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/domains.json';
 const FALLBACK_DOMAINS = [
+    'https://333.aavck.cc',
     'https://111.aavck.cc',
     'https://222.aavck.cc',
-    'https://333.aavck.cc',
     'https://444.aavck.cc',
     'https://555.aavck.cc',
     'https://111.aauck.cc',
