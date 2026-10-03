@@ -1,12 +1,13 @@
 /**
  * Digital Original Media Spider
- * Version: 1.0.2-Production
+ * Version: 1.0.3-Production
  * Standards: CatVod / TVBox QuickJS Specification
  */
 
 let HOST = 'https://91porn.com';
 let IMG_HOST = 'https://raw.myvbox99.top/91-img';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const DEFAULT_COOKIE = 'ga=OlYqv%5E73b0g9fg9tiYjSwkXIfB_oFGoVlt6luJuk7KXoO3qZuOF7RBQqypYA; CLIPSHARE=5dbb326a0cc3fd9c87072268deff02a6; language=cn_CN';
 
 let siteKey = '';
 let siteType = 0;
@@ -51,7 +52,7 @@ function getResponseContent(res) {
     return String(res);
 }
 
-// GET 网络请求
+// GET 网络请求（内置长效访客验证凭据）
 async function request(reqUrl) {
     try {
         let res = await req(reqUrl, {
@@ -60,7 +61,7 @@ async function request(reqUrl) {
                 'User-Agent': DEFAULT_UA,
                 'Referer': HOST + '/',
                 'Accept-Language': 'zh-CN,zh;q=0.9',
-                'Cookie': 'language=cn_CN'
+                'Cookie': DEFAULT_COOKIE
             }
         });
         return getResponseContent(res);
@@ -238,7 +239,11 @@ async function search(wd, quick, pg) {
 async function play(flag, id, flags) {
     return JSON.stringify({
         parse: 0,
-        url: id
+        url: id,
+        header: {
+            'User-Agent': DEFAULT_UA,
+            'Referer': HOST + '/'
+        }
     });
 }
 
