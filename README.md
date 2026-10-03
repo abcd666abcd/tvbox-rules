@@ -16,6 +16,7 @@ A modular, lightweight streaming rule parser and media indexing engine designed 
 * **多源聚合架构**：
   * **全量资源引擎**（`media_spider.js`）：多域名热备探测、本地闭环验证与免嗅探直链逆向。
   * **自制短视频工坊**（`tangxin_spider.js`）：国内高速 CDN 直链 0ms 秒开、智能推荐页去重与创作者分类体系。
+  * **数字原创工坊**（`p91_spider.js`）：短视频社区精选、全分类索引与签名直链快速解析。
 * **专属边缘网关加速**：
   * 依托海外私有 CDN 节点（`raw.myvbox99.top`），配置亚秒级穿透与边缘微缓存。
   * 内置图片防盗链动态反代，突破移动端底层播放器 Header 注入限制。
@@ -42,6 +43,7 @@ tvbox-rules/
 ├── config.json          # TVBox 主订阅配置文件
 ├── media_spider.js      # 综合视频聚合爬虫实现
 ├── tangxin_spider.js    # 自制影像工坊爬虫实现
+├── p91_spider.js        # 数字原创工坊爬虫实现
 ├── domains.json         # 动态域名备用池（热更新）
 ├── legado_source.json   # 阅读 3.x 外部流媒体调用规则
 ├── worker/              # Cloudflare Edge Worker 网关工程

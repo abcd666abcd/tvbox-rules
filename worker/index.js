@@ -59,6 +59,84 @@ export default {
       }
     }
 
+    // 91 封面图片反代（代拉 cdn77 并边缘缓存 30 天）
+    if (target.startsWith('91-img/') || target.startsWith('91-img')) {
+      const cleanPath = target.replace(/^91-img\/?/, '');
+      const imgMatch = cleanPath.match(/(\d+)/);
+      if (imgMatch) {
+        const thumbId = imgMatch[1];
+        const cdnImgUrl = `https://1729130453.rsc.cdn77.org/thumb/${thumbId}.jpg`;
+        try {
+          const resp = await fetch(cdnImgUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+          });
+          const newHeaders = new Headers(resp.headers);
+          newHeaders.set('Access-Control-Allow-Origin', '*');
+          newHeaders.set('Content-Type', 'image/jpeg');
+          newHeaders.set('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
+          newHeaders.delete('Content-Encoding');
+          return new Response(resp.body, {
+            status: resp.status,
+            headers: newHeaders
+          });
+        } catch (e) {
+          return new Response(`Error proxying 91 image: ${e.message}`, { status: 500 });
+        }
+      }
+    }
+
+    // 91 页面轻量反代 (列表、搜索与详情页)
+    if (target.startsWith('91/') || target === '91') {
+      const p91Path = target.replace(/^91\/?/, '');
+      const p91Url = `https://91porn.com/${p91Path}${url.search}`;
+      try {
+        const resp = await fetch(p91Url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Upgrade-Insecure-Requests': '1',
+            'Referer': 'https://91porn.com/',
+            'Cookie': 'language=cn_CN'
+          }
+        });
+        const html = await resp.text();
+        if (!html || html.length < 100) {
+          return new Response(JSON.stringify({
+            url: p91Url,
+            status: resp.status,
+            statusText: resp.statusText,
+            headers: Object.fromEntries(resp.headers.entries()),
+            bodySample: html
+          }, null, 2), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        }
+        return new Response(html, {
+          status: resp.status,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'text/html; charset=UTF-8',
+            'Cache-Control': 'public, max-age=120'
+          }
+        });
+      } catch (e) {
+        return new Response(`Error proxying 91: ${e.message}`, { status: 500 });
+      }
+    }
+
     // 支持各种前缀传入形式
     target = target.replace(/^https?:\/\/(raw\.githubusercontent\.com|github\.com)\//, '');
     
