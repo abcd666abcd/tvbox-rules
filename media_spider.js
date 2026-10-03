@@ -3,10 +3,15 @@
  * Version: 2.1.0-Release
  */
 
-let HOST = 'https://111.aauck.cc';
+let HOST = 'https://111.aavck.cc';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const REMOTE_DOMAINS_URL = 'https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/domains.json';
 const FALLBACK_DOMAINS = [
+    'https://111.aavck.cc',
+    'https://222.aavck.cc',
+    'https://333.aavck.cc',
+    'https://444.aavck.cc',
+    'https://555.aavck.cc',
     'https://111.aauck.cc',
     'https://222.aauck.cc',
     'https://333.aauck.cc',
@@ -251,7 +256,7 @@ async function detectHost() {
 
     // 4. 对每个可用主域，额外自动探测相邻前缀（例如 111, 222, 333, 444, 555）
     let prefixes = [111, 222, 333, 444, 555];
-    let candidateBases = ['aauck.cc', 'aatck.cc'];
+    let candidateBases = ['aavck.cc', 'aauck.cc', 'aatck.cc'];
     candidateBases.forEach(function(base) {
         prefixes.forEach(function(num) {
             let u = 'https://' + num + '.' + base;
