@@ -1,6 +1,6 @@
 /**
  * Tangxin Media Core Spider
- * Version: 1.1.0-DirectRelease (Mainland China Direct Optimized)
+ * Version: 1.2.0-Production
  * Standards: CatVod / TVBox QuickJS Specification
  */
 
@@ -11,6 +11,24 @@ const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 let siteKey = '';
 let siteType = 0;
+
+// 规范分类字典（纯数字 type_id，严禁包含斜杠与中文，确保 Android SQLite 与 Tab 兼容）
+const CATEGORY_MAP = {
+    '1': { name: '精选合辑', path: 'featured' },
+    '2': { name: '柚子猫', path: 'a/Yuzukitty柚子猫' },
+    '3': { name: '桥本香菜', path: 'a/桥本香菜' },
+    '4': { name: '小欣奈', path: 'a/小欣奈' },
+    '5': { name: '饼干姐姐', path: 'a/饼干姐姐' },
+    '6': { name: '星野兔', path: 'a/星野兔' },
+    '7': { name: '小狐狸', path: 'a/Sweetie Fox(小狐狸)' },
+    '8': { name: 'Nana', path: 'a/Nana_taipei' },
+    '9': { name: '整活工坊', path: 'a/小野整活部' },
+    '10': { name: 'AI短剧', path: 'a/糖心AI创意短剧' },
+    '11': { name: '反差剧场', path: 'a/极限反差团' },
+    '12': { name: '星空专区', path: 'a/星空无限传媒' },
+    '13': { name: '爱豆专区', path: 'a/爱豆传媒' },
+    '14': { name: '二次元漫剪', path: 'tag/cospaly' }
+};
 
 // 递归解包
 function getResponseContent(res) {
@@ -90,49 +108,43 @@ function parseCards(html) {
 }
 
 async function init(cfg) {
-    siteKey = cfg.skey;
-    siteType = cfg.stype;
+    if (cfg) {
+        siteKey = cfg.skey || '';
+        siteType = cfg.stype || 0;
+    }
 }
 
-// 动态输出知名创作者与精选分类（按用户要求侧重创作者专栏）
+// 动态输出知名创作者与精选分类
 async function home(filter) {
+    let classes = [];
+    for (let k in CATEGORY_MAP) {
+        classes.push({
+            type_id: k,
+            type_name: CATEGORY_MAP[k].name
+        });
+    }
     return JSON.stringify({
-        class: [
-            { type_id: 'featured', type_name: '精选合辑' },
-            { type_id: 'a/Yuzukitty柚子猫', type_name: '柚子猫' },
-            { type_id: 'a/桥本香菜', type_name: '桥本香菜' },
-            { type_id: 'a/小欣奈', type_name: '小欣奈' },
-            { type_id: 'a/饼干姐姐', type_name: '饼干姐姐' },
-            { type_id: 'a/星野兔', type_name: '星野兔' },
-            { type_id: 'a/Sweetie Fox(小狐狸)', type_name: '小狐狸' },
-            { type_id: 'a/Nana_taipei', type_name: 'Nana' },
-            { type_id: 'a/小野整活部', type_name: '整活工坊' },
-            { type_id: 'a/糖心AI创意短剧', type_name: 'AI短剧' },
-            { type_id: 'a/极限反差团', type_name: '反差剧场' },
-            { type_id: 'a/星空无限传媒', type_name: '星空专区' },
-            { type_id: 'a/爱豆传媒', type_name: '爱豆专区' },
-            { type_id: 'tag/cospaly', type_name: '二次元漫剪' }
-        ]
+        class: classes
     });
 }
 
 async function homeVod() {
-    return await category('featured', '1', false, {});
+    return await category('1', '1', false, {});
 }
 
 async function category(tid, pg, filter, extend) {
     let page = parseInt(pg || '1');
+    let conf = CATEGORY_MAP[String(tid)] || CATEGORY_MAP['1'];
+    let path = conf.path;
     let url = '';
 
-    if (tid === 'featured') {
+    if (path === 'featured') {
         url = page === 1 ? `${HOST}/featured/` : `${HOST}/featured/${page}/`;
-    } else if (tid.startsWith('a/') || tid.startsWith('tag/')) {
-        let parts = tid.split('/');
+    } else {
+        let parts = path.split('/');
         let prefix = parts[0];
         let slug = encodeURIComponent(parts.slice(1).join('/'));
         url = page === 1 ? `${HOST}/${prefix}/${slug}/` : `${HOST}/${prefix}/${slug}/${page}/`;
-    } else {
-        url = page === 1 ? `${HOST}/featured/` : `${HOST}/featured/${page}/`;
     }
 
     let html = await request(url);
@@ -149,7 +161,7 @@ async function category(tid, pg, filter, extend) {
 }
 
 async function detail(id) {
-    let vid = id;
+    let vid = String(id);
     if (vid.includes('/')) {
         let m = vid.match(/(\d+)/);
         if (m) vid = m[1];
@@ -189,7 +201,7 @@ async function detail(id) {
 
 async function search(wd, quick) {
     if (!wd) return JSON.stringify({ list: [] });
-    let trimmed = wd.trim();
+    let trimmed = String(wd).trim();
 
     // 优先尝试演员/创作者专栏
     let actorUrl = `${HOST}/a/${encodeURIComponent(trimmed)}/`;
@@ -207,7 +219,7 @@ async function search(wd, quick) {
 }
 
 async function play(flag, id, flags) {
-    let playUrl = id;
+    let playUrl = String(id);
     if (!playUrl.startsWith('http://') && !playUrl.startsWith('https://')) {
         playUrl = `${CDN}/videos/${id}/index.m3u8`;
     }
@@ -220,4 +232,21 @@ async function play(flag, id, flags) {
             'Referer': ORIGIN + '/'
         }
     });
+}
+
+// 关键规范导出接口（兼容 ES Module 与 QuickJS 全局调用）
+export function __jsEvalReturn() {
+    return {
+        init: init,
+        home: home,
+        homeVod: homeVod,
+        category: category,
+        detail: detail,
+        play: play,
+        search: search
+    };
+}
+
+if (typeof globalThis !== 'undefined') {
+    globalThis.__jsEvalReturn = __jsEvalReturn;
 }
