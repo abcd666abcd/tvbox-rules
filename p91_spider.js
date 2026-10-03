@@ -1,6 +1,6 @@
 /**
  * Digital Original Media Spider
- * Version: 1.0.0-Production
+ * Version: 1.0.1-Production
  * Standards: CatVod / TVBox QuickJS Specification
  */
 
@@ -73,15 +73,22 @@ async function request(reqUrl) {
 function parseCards(html) {
     let vods = [];
     if (!html) return vods;
-    let chunks = html.split(/<div\s+class=["'][^"']*well\s+well-sm\s+videos-text-align[^"']*["']/i);
-    for (let i = 1; i < chunks.length; i++) {
-        let c = chunks[i];
-        let idM = c.match(/view_video\.php\?viewkey=([a-zA-Z0-9]+)/i);
-        let titleM = c.match(/video-title[^>]*>([\s\S]*?)<\/a>/i);
-        let picM = c.match(/src=["'](https?:\/\/[^"']*\/thumb\/(\d+)\.jpg)["']/i);
-        let durM = c.match(/<span\s+class=["']duration["']>([^<]+)<\/span>/i);
-        let hdM = /class=["'][^"']*hd-text-icon[^"']*["']/i.test(c);
-        let authorM = c.match(/<span\s+class=["']info["']>([^<]*作者[^<]*)<\/span>\s*([\s\S]*?)<br/i);
+    let items = html.split(/<div\s+class=["'][^"']*col-xs-12[^"']*["']/i);
+    for (let i = 1; i < items.length; i++) {
+        let chunk = items[i];
+
+        // 关键过滤：剔除站方置顶竞价推广与错位卡片 (包含 c=auct / c=aaxbms 或容器为 col-lg-8)
+        if (chunk.includes('col-lg-8') || chunk.includes('c=auct') || chunk.includes('c=aaxbms')) {
+            continue;
+        }
+
+        // 兼容匹配普通视频 view_video.php 与高清专区 view_video_hd.php
+        let idM = chunk.match(/view_video(?:_hd)?\.php\?viewkey=([a-zA-Z0-9]+)/i);
+        let titleM = chunk.match(/video-title[^>]*>([\s\S]*?)<\/a>/i);
+        let picM = chunk.match(/src=["'](https?:\/\/[^"']*\/thumb\/(\d+)\.jpg)["']/i);
+        let durM = chunk.match(/<span\s+class=["']duration["']>([^<]+)<\/span>/i);
+        let hdM = /class=["'][^"']*hd-text-icon[^"']*["']/i.test(chunk);
+        let authorM = chunk.match(/<span\s+class=["']info["']>([^<]*作者[^<]*)<\/span>\s*([\s\S]*?)<br/i);
 
         if (idM && titleM) {
             let vid = idM[1];
