@@ -3,3 +3,8 @@ CLAUDE.md
 *.log
 .vscode/
 .idea/
+.wrangler/
+worker/.wrangler/
+node_modules/
+
+
