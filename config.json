@@ -14,7 +14,7 @@
       "key": "media_v_tangxin",
       "name": "自制影像工坊",
       "type": 3,
-      "api": "https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/tangxin_spider.js",
+      "api": "https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/tangxin_spider.js?v=1.2.1",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0

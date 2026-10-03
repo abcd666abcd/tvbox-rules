@@ -7,6 +7,7 @@
 let HOST = 'https://raw.myvbox99.top/tx';
 let ORIGIN = 'https://tangxinvlog.app';
 let CDN = 'https://t.5gcdn.xyz';
+let IMG_HOST = 'https://raw.myvbox99.top/tx-img';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 let siteKey = '';
@@ -89,7 +90,7 @@ function parseCards(html) {
         if (idM) {
             let id = idM[1];
             let title = titleM ? titleM[1].trim() : ('作品 ' + id);
-            let pic = picM ? picM[1] : (`${CDN}/videos/${id}/cover.jpg`);
+            let pic = `${IMG_HOST}/${id}.jpg`;
             let dur = durM ? durM[1].trim() : '';
             let nick = nickM ? nickM[1].replace(/<[^>]+>/g, '').replace(/^@\s*/, '').trim() : '';
             let rem = dur + (nick ? ' · ' + nick : '');
@@ -174,8 +175,7 @@ async function detail(id) {
                      html.match(/<title>([^<]+)<\/title>/i);
     let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : `视频 ${vid}`;
 
-    let picMatch = html.match(/src=["'](https?:\/\/[^"']+cover\.jpg)["']/i);
-    let pic = picMatch ? picMatch[1] : `${CDN}/videos/${vid}/cover.jpg`;
+    let pic = `${IMG_HOST}/${vid}.jpg`;
 
     let descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i);
     let desc = descMatch ? descMatch[1].trim() : '';
