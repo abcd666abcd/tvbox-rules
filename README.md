@@ -1,7 +1,7 @@
 # Media Aggregator Core (TVBox Protocol Engine)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/Version-2.2.0-brightgreen.svg)]()
+[![Version](https://img.shields.io/badge/Version-2.3.0-brightgreen.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-TVBox%20%7C%20CatVod-orange.svg)]()
 [![CDN: Private](https://img.shields.io/badge/CDN-High--Availability-success.svg)]()
 

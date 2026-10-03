@@ -47,11 +47,15 @@ npx wrangler deploy
 ```powershell
 curl.exe -x http://127.0.0.1:7890 -s "https://raw.myvbox99.top/abcd666abcd/tvbox-rules/main/config.json"
 ```
-* **期望结果**：HTTP 200，返回包含 `media_v_store` 和 `media_v_tangxin` 的完整 JSON，且 API 后缀带有正确的版本号。
+* **期望结果**：HTTP 200，返回包含 `media_v_store`、`media_v_tangxin` 与 `media_v_p91` 的完整 JSON，且 API 后缀带有正确的版本号。
 
-### 3.2 验证图片防盗链反代
+### 3.2 验证图片防盗链与 CDN 反代
 ```powershell
+# 验证唐心封面防盗链反代
 curl.exe -x http://127.0.0.1:7890 -I -s "https://raw.myvbox99.top/tx-img/2727.jpg"
+
+# 验证 91 封面 CDN 反代
+curl.exe -x http://127.0.0.1:7890 -I -s "https://raw.myvbox99.top/91-img/1248094.jpg"
 ```
 * **期望结果**：HTTP 200，`Content-Type: image/jpeg`，且包含 `Cache-Control: public, max-age=604800, s-maxage=2592000`。
 

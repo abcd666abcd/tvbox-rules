@@ -21,6 +21,7 @@ flowchart TD
     subgraph Adapters ["规则解析适配器 (Spiders)"]
         Spider1["media_spider.js<br/>(综合视频仓库)"]
         Spider2["tangxin_spider.js<br/>(自制影像工坊)"]
+        Spider3["p91_spider.js<br/>(数字原创工坊)"]
     end
 
     subgraph Upstream ["上游媒体资源 (Upstream Media & CDN)"]
@@ -28,6 +29,9 @@ flowchart TD
         HSCK_Stream["HLS 分片直链 (.m3u8)"]
         TX_Site["静态 Astro 目录站点"]
         TX_CDN["全国内高速 CDN (t.5gcdn.xyz)"]
+        P91_Site["社区视频平台 (91porn.com)"]
+        P91_CDN["边缘图片 CDN (cdn77.org)"]
+        P91_Stream["MP4 正片直链 (btc620.com)"]
     end
 
     TVBox -->|获取订阅| WorkerRouter
@@ -36,6 +40,7 @@ flowchart TD
 
     TVBox -->|执行爬虫脚本| Spider1
     TVBox -->|执行爬虫脚本| Spider2
+    TVBox -->|执行爬虫脚本| Spider3
 
     Spider1 -->|闭环探测 & 逆向解析| HSCK_Site
     Spider1 -->|0ms 直链透传| HSCK_Stream
@@ -47,6 +52,12 @@ flowchart TD
     ImgProxy -->|注入 Referer| TX_CDN
     Spider2 -->|直接组装直链| TX_CDN
     TVBox -->|原生播放| TX_CDN
+
+    Spider3 -->|注入长效凭据访问| P91_Site
+    Spider3 -->|直连请求图片| ImgProxy
+    ImgProxy -->|代拉并缓存图片| P91_CDN
+    Spider3 -->|unescape 提取直链| P91_Stream
+    TVBox -->|原生播放| P91_Stream
 ```
 
 ---
@@ -74,6 +85,20 @@ flowchart TD
   * 规范分类字典（'1'~'13'），移出「精选合辑」标签。
   * TVBox 客户端默认的「推荐」Tab 专属于 `homeVod()`，统一渲染精选流，界面无冗余。
 
+### 2.3 数字原创工坊 (`p91_spider.js`)
+* **核心职责**：社区原创短视频索引、长效防蜜罐凭据注入与 0ms 直链直出。
+* **反欺骗防御与长效凭据**：
+  * 原站部署非浏览器防爬机制（会下发低清 202x244 广告切片）。通过请求头注入真机激活的长效访客凭据（`ga=...`，有效期至 2029 年），彻底锁定 1:1 真实正片直链。
+* **广告隔离与高清放行**：
+  * 列表卡片采用 `col-xs-12` 物理块级切割。
+  * 剔除顶层 `col-lg-8` 推广位与 `c=aaxbms`、`c=auct`、`c=aipneu` 轮播广告卡片，精准放行高清专属参数 `c=axbms`。
+* **直链解析与 0ms 透传**：
+  * `detail()` 解析页面底部 `strencode2` 解码出 MP4 媒体直链。
+  * `play()` 耗时 0ms 直接透传，内置 Referer 防盗链请求头。
+* **双轨分类与推荐接管**：
+  * 采用“原站榜单 + 高频专区”双轨制。
+  * 移出「精选更新」分类，客户端原生「推荐」Tab (`homeVod()`) 独立供给最新精选流，界面无冗余。
+
 ---
 
 ## 3. 私有边缘路由网关 (`worker/index.js`)
@@ -84,4 +109,6 @@ flowchart TD
 |---|---|---|---|
 | `/tx-img/{id}.jpg` | `t.5gcdn.xyz/videos/{id}/cover.jpg` | 注入 Referer 与移动端 UA，突破 403 防盗链 | `public, max-age=604800, s-maxage=2592000` (边缘 30 天) |
 | `/tx/{path}` | `tangxinvlog.app/{path}` | 代理拉取主站 HTML，穿透网络屏蔽 | `public, max-age=180` (边缘 3 分钟) |
+| `/91-img/{id}.jpg` | `1729130453.rsc.cdn77.org/thumb/{id}.jpg` | 反代封面图 CDN，绕过 SNI 阻断 | `public, max-age=604800, s-maxage=2592000` (边缘 30 天) |
+| `/91/{path}` | `91porn.com/{path}` | 代理主站列表与详情，备选穿透链路 | `public, max-age=120` (边缘 2 分钟) |
 | `/{path}` (默认) | `raw.githubusercontent.com/{path}` | 注入微秒时间戳 `_t`，打穿 Fastly CDN 缓存 | `no-store, no-cache, must-revalidate, max-age=0` (实时穿透) |
