@@ -1,6 +1,6 @@
 /**
  * Digital Original Media Spider
- * Version: 1.0.3-Production
+ * Version: 1.0.4-Production
  * Standards: CatVod / TVBox QuickJS Specification
  */
 
@@ -12,18 +12,19 @@ const DEFAULT_COOKIE = 'ga=OlYqv%5E73b0g9fg9tiYjSwkXIfB_oFGoVlt6luJuk7KXoO3qZuOF
 let siteKey = '';
 let siteType = 0;
 
-// 规范分类字典（纯数字 type_id，榜单 + 经典高频热搜专区双轨制）
+// 规范分类字典（榜单 + 原站原生专区双轨制，去重精选由 homeVod 接管）
 const CATEGORY_MAP = {
-    '1': { name: '精选更新', type: 'url', path: '/v.php?category=top&viewtype=basic' },
-    '2': { name: '每月最热', type: 'url', path: '/v.php?category=top&m=-1&viewtype=basic' },
-    '3': { name: '自拍原创', type: 'search', wd: '自拍' },
-    '4': { name: '极品探花', type: 'search', wd: '探花' },
-    '5': { name: '清纯学生', type: 'search', wd: '学生' },
-    '6': { name: '反差女友', type: 'search', wd: '女友' },
-    '7': { name: '风韵少妇', type: 'search', wd: '少妇' },
-    '8': { name: '户外野战', type: 'search', wd: '户外' },
-    '9': { name: '高清专区', type: 'url', path: '/v.php?category=hd&viewtype=basic' },
-    '10': { name: '长视频区', type: 'url', path: '/v.php?category=longer&viewtype=basic' }
+    '1': { name: '当前最热', type: 'url', path: '/v.php?category=hot&viewtype=basic' },
+    '2': { name: '最近加精', type: 'url', path: '/v.php?category=rf&viewtype=basic' },
+    '3': { name: '每月最热', type: 'url', path: '/v.php?category=top&m=-1&viewtype=basic' },
+    '4': { name: '本月收藏', type: 'url', path: '/v.php?category=tf&viewtype=basic' },
+    '5': { name: '91原创', type: 'url', path: '/v.php?category=ori&viewtype=basic' },
+    '6': { name: '高清专区', type: 'url', path: '/v.php?category=hd&viewtype=basic' },
+    '7': { name: '极品探花', type: 'search', wd: '探花' },
+    '8': { name: '清纯学生', type: 'search', wd: '学生' },
+    '9': { name: '风韵人妻', type: 'search', wd: '人妻' },
+    '10': { name: '户外实景', type: 'search', wd: '户外' },
+    '11': { name: '长视频区', type: 'url', path: '/v.php?category=long&viewtype=basic' }
 };
 
 // 递归解包
@@ -84,8 +85,8 @@ function parseCards(html) {
 
         // 核心过滤防线：
         // 1. col-lg-8 为站方置顶竞价广告容器（真实卡片均为 col-lg-3）
-        // 2. c=a 开头推广参数（如 c=aipneu, c=auct, c=aaxbms）均为广告轮播链接
-        if (cls.includes('col-lg-8') || body.includes('c=a') || body.includes('c=auct') || body.includes('c=aaxbms')) {
+        // 2. 广告轮播链接带有 c=aaxbms, c=auct, c=aipneu 等特定推广参数（注意：普通高清带有 c=axbms，不可粗暴过滤 c=a）
+        if (cls.includes('col-lg-8') || body.includes('c=aaxbms') || body.includes('c=auct') || body.includes('c=aipneu')) {
             continue;
         }
 
@@ -144,9 +145,17 @@ async function home(filter) {
     });
 }
 
-// 客户端原生「推荐」Tab 接管：默认展示精选更新
+// 客户端原生「推荐」Tab 接管：默认展示最新精选更新（不放入独立分类，杜绝内容重复）
 async function homeVod() {
-    return await category('1', '1', false, {});
+    let html = await request(`${HOST}/v.php?category=top&viewtype=basic&page=1`);
+    let vods = parseCards(html);
+    return JSON.stringify({
+        page: 1,
+        pagecount: 1,
+        limit: vods.length,
+        total: 9999,
+        list: vods
+    });
 }
 
 async function category(tid, pg, filter, extend) {
