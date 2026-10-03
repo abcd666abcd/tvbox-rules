@@ -1,6 +1,6 @@
 /**
  * Digital Original Media Spider
- * Version: 1.0.1-Production
+ * Version: 1.0.2-Production
  * Standards: CatVod / TVBox QuickJS Specification
  */
 
@@ -11,18 +11,18 @@ const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 let siteKey = '';
 let siteType = 0;
 
-// 规范分类字典（纯数字 type_id）
+// 规范分类字典（纯数字 type_id，榜单 + 经典高频热搜专区双轨制）
 const CATEGORY_MAP = {
-    '1': { name: '当前最热', cat: 'hot' },
-    '2': { name: '本月最热', cat: 'top' },
-    '3': { name: '原创精选', cat: 'ori' },
-    '4': { name: '最近加精', cat: 'rf' },
-    '5': { name: '高清专区', cat: 'hd' },
-    '6': { name: '10分钟+', cat: 'long' },
-    '7': { name: '20分钟+', cat: 'longer' },
-    '8': { name: '本月收藏', cat: 'tf' },
-    '9': { name: '收藏最多', cat: 'mf' },
-    '10': { name: '本月讨论', cat: 'md' }
+    '1': { name: '精选更新', type: 'url', path: '/v.php?category=top&viewtype=basic' },
+    '2': { name: '每月最热', type: 'url', path: '/v.php?category=top&m=-1&viewtype=basic' },
+    '3': { name: '自拍原创', type: 'search', wd: '自拍' },
+    '4': { name: '极品探花', type: 'search', wd: '探花' },
+    '5': { name: '清纯学生', type: 'search', wd: '学生' },
+    '6': { name: '反差女友', type: 'search', wd: '女友' },
+    '7': { name: '风韵少妇', type: 'search', wd: '少妇' },
+    '8': { name: '户外野战', type: 'search', wd: '户外' },
+    '9': { name: '高清专区', type: 'url', path: '/v.php?category=hd&viewtype=basic' },
+    '10': { name: '长视频区', type: 'url', path: '/v.php?category=longer&viewtype=basic' }
 };
 
 // 递归解包
@@ -69,39 +69,50 @@ async function request(reqUrl) {
     }
 }
 
-// 物理切块解析卡片列表
+// 精准过滤广告与物理卡片解析
 function parseCards(html) {
     let vods = [];
     if (!html) return vods;
-    let items = html.split(/<div\s+class=["'][^"']*col-xs-12[^"']*["']/i);
-    for (let i = 1; i < items.length; i++) {
-        let chunk = items[i];
 
-        // 关键过滤：剔除站方置顶竞价推广与错位卡片 (包含 c=auct / c=aaxbms 或容器为 col-lg-8)
-        if (chunk.includes('col-lg-8') || chunk.includes('c=auct') || chunk.includes('c=aaxbms')) {
+    // 匹配每一个视频卡片外层 div 容器（保留 class 属性以供深度安全过滤）
+    let matches = [...html.matchAll(/<div\s+class=["']([^"']*col-xs-12[^"']*)["']([^>]*)>([\s\S]*?)<\/div>\s*<\/div>/gi)];
+
+    for (let m of matches) {
+        let cls = m[1];
+        let body = m[3];
+
+        // 核心过滤防线：
+        // 1. col-lg-8 为站方置顶竞价广告容器（真实卡片均为 col-lg-3）
+        // 2. c=a 开头推广参数（如 c=aipneu, c=auct, c=aaxbms）均为广告轮播链接
+        if (cls.includes('col-lg-8') || body.includes('c=a') || body.includes('c=auct') || body.includes('c=aaxbms')) {
             continue;
         }
 
-        // 兼容匹配普通视频 view_video.php 与高清专区 view_video_hd.php
-        let idM = chunk.match(/view_video(?:_hd)?\.php\?viewkey=([a-zA-Z0-9]+)/i);
-        let titleM = chunk.match(/video-title[^>]*>([\s\S]*?)<\/a>/i);
-        let picM = chunk.match(/src=["'](https?:\/\/[^"']*\/thumb\/(\d+)\.jpg)["']/i);
-        let durM = chunk.match(/<span\s+class=["']duration["']>([^<]+)<\/span>/i);
-        let hdM = /class=["'][^"']*hd-text-icon[^"']*["']/i.test(chunk);
-        let authorM = chunk.match(/<span\s+class=["']info["']>([^<]*作者[^<]*)<\/span>\s*([\s\S]*?)<br/i);
+        // 兼容普通视频 view_video.php 与高清专区 view_video_hd.php
+        let idM = body.match(/view_video(?:_hd)?\.php\?viewkey=([a-zA-Z0-9]+)/i);
+        let titleM = body.match(/video-title[^>]*>([\s\S]*?)<\/a>/i);
+        let picM = body.match(/src=["'](https?:\/\/[^"']*\/thumb\/(\d+)\.jpg)["']/i);
+        let durM = body.match(/<span\s+class=["']duration["']>([^<]+)<\/span>/i);
+        let hdM = /class=["'][^"']*hd-text-icon[^"']*["']/i.test(body);
+        let authorM = body.match(/<span\s+class=["']info["']>([^<]*作者[^<]*)<\/span>\s*([\s\S]*?)<br/i);
 
         if (idM && titleM) {
             let vid = idM[1];
-            let title = titleM[1].replace(/<[^>]+>/g, '').replace(/\?\/?span>/g, '').trim();
+            let rawTitle = titleM[1].replace(/<[^>]+>/g, '')
+                                    .replace(/<\/?span[^>]*>/gi, '')
+                                    .replace(/\?\/?span>/gi, '')
+                                    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                                    .trim();
             let pic = picM ? `${IMG_HOST}/${picM[2]}.jpg` : '';
             let dur = durM ? durM[1].trim() : '';
             let author = authorM ? authorM[2].replace(/<[^>]+>/g, '').trim() : '';
             let rem = (hdM ? 'HD ' : '') + dur + (author ? ' · ' + author : '');
 
+            // 严格去重保障
             if (!vods.some(v => v.vod_id === vid)) {
                 vods.push({
                     vod_id: vid,
-                    vod_name: title || ('视频 ' + vid),
+                    vod_name: rawTitle || ('视频 ' + vid),
                     vod_pic: pic,
                     vod_remarks: rem.trim()
                 });
@@ -132,7 +143,7 @@ async function home(filter) {
     });
 }
 
-// 客户端原生「推荐」Tab 接管：默认展示当前最热
+// 客户端原生「推荐」Tab 接管：默认展示精选更新
 async function homeVod() {
     return await category('1', '1', false, {});
 }
@@ -140,8 +151,13 @@ async function homeVod() {
 async function category(tid, pg, filter, extend) {
     let page = parseInt(pg || '1');
     let conf = CATEGORY_MAP[String(tid)] || CATEGORY_MAP['1'];
-    let cat = conf.cat;
-    let url = `${HOST}/v.php?category=${cat}&viewtype=basic&page=${page}`;
+    let url = '';
+
+    if (conf.type === 'search') {
+        url = `${HOST}/search_result.php?search_id=${encodeURIComponent(conf.wd)}&search_type=search_videos&page=${page}`;
+    } else {
+        url = `${HOST}${conf.path}&page=${page}`;
+    }
 
     let html = await request(url);
     let vods = parseCards(html);
@@ -179,7 +195,7 @@ async function detail(id) {
 
     let titleMatch = html.match(/<h4[^>]*class=["'][^"']*login_register_header[^"']*["'][^>]*>([\s\S]*?)<\/h4>/i) ||
                      html.match(/<title>([^<]+)<\/title>/i);
-    let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : `视频 ${vid}`;
+    let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim() : `视频 ${vid}`;
 
     let pic = '';
     let posterM = html.match(/poster=["'](https?:\/\/[^"']*\/thumb\/(\d+)\.jpg)["']/i);
